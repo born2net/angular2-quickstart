@@ -1,0 +1,16 @@
+<div id="playlist-template" class="row">
+    <div class="col-md-3 column">
+        <img [src]="entry.previewImg" class="img-circle" width="60px" height="60px">
+    </div>
+    <div class="col-md-5 column">
+        <p class="title">{{ entry.title }}</p>
+    </div>
+    <div class="col-md-4 column">
+        <button (click)="playConcert(entry.id)" title="Play now" class="play btn btn-sm btn-success">
+            <span class="glyphicon glyphicon-play-circle" aria-hidden="true"></span>
+        </button>
+        <button (click)="removeEntry(entry)" title="Remove from playlist" class="remove btn btn-sm btn-danger">
+            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+        </button>
+    </div>
+</div>

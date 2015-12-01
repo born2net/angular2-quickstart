@@ -1,0 +1,1 @@
+{"version":3,"file":"browser_xhr.js","sourceRoot":"","sources":["browser_xhr.ts"],"names":["BrowserXhr","BrowserXhr.constructor","BrowserXhr.build"],"mappings":";;;;;;;;;;;;;;;YAEA,+DAA+D;YAC/D;gBAEEA;gBAAeC,CAACA;gBAChBD,KAAKA,KAAUE,MAAMA,CAAMA,CAACA,IAAIA,cAAcA,EAAEA,CAACA,CAACA,CAACA,CAACA;YACtDF,CAACA;YAJD;gBAAC,qBAAU,EAAE;2BAIZ;YAHY,UAAU,aAGtB,CAAA"}

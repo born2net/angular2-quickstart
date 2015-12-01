@@ -1,0 +1,166 @@
+System.register(['angular2/src/core/di', 'angular2/src/core/forms', 'angular2/src/core/facade/lang', 'angular2/src/core/facade/exceptions', 'angular2/src/core/facade/async', 'angular2/src/core/compiler/xhr', 'angular2/src/web_workers/worker/xhr_impl', 'angular2/src/core/compiler/app_root_url', './renderer', 'angular2/src/core/render/api', 'angular2/src/web_workers/shared/client_message_broker', 'angular2/src/web_workers/shared/service_message_broker', 'angular2/src/web_workers/shared/message_bus', 'angular2/src/core/application_ref', "angular2/src/web_workers/shared/serializer", "angular2/src/web_workers/shared/api", 'angular2/src/web_workers/shared/render_proto_view_ref_store', 'angular2/src/web_workers/shared/render_view_with_fragments_store', 'angular2/src/web_workers/shared/messaging_api', 'angular2/src/web_workers/worker/event_dispatcher', 'angular2/src/core/compiler/compiler'], function(exports_1) {
+    var di_1, forms_1, lang_1, exceptions_1, async_1, xhr_1, xhr_impl_1, app_root_url_1, renderer_1, api_1, client_message_broker_1, service_message_broker_1, message_bus_1, application_ref_1, serializer_1, api_2, render_proto_view_ref_store_1, render_view_with_fragments_store_1, async_2, messaging_api_1, event_dispatcher_1, compiler_1;
+    var PrintLogger;
+    /**
+     * Initialize the Angular 'platform' on the page in a manner suitable for applications
+     * running in a web worker. Applications running on a web worker do not have direct
+     * access to DOM APIs.
+     *
+     * See {@link PlatformRef} for details on the Angular platform.
+     *
+     * # Without specified providers
+     *
+     * If no providers are specified, `platform`'s behavior depends on whether an existing
+     * platform exists:
+     *
+     * If no platform exists, a new one will be created with the default {@link platformBindings}.
+     *
+     * If a platform already exists, it will be returned (regardless of what providers it
+     * was created with). This is a convenience feature, allowing for multiple applications
+     * to be loaded into the same platform without awareness of each other.
+     *
+     * # With specified providers
+     *
+     * It is also possible to specify providers to be made in the new platform. These providers
+     * will be shared between all applications on the page. For example, an abstraction for
+     * the browser cookie jar should be bound at the platform level, because there is only one
+     * cookie jar regardless of how many applications on the age will be accessing it.
+     *
+     * If providers are specified directly, `platform` will create the Angular platform with
+     * them if a platform did not exist already. If it did exist, however, an error will be
+     * thrown.
+     *
+     * # For Web Worker Appplications
+     *
+     * This version of `platform` initializes Angular for use with applications
+     * that do not directly touch the DOM, such as applications which run in a
+     * web worker context. Applications that need direct access to the DOM should
+     * use `platform` from `core/application_common` instead.
+     */
+    function platform(bindings) {
+        return application_ref_1.platformCommon(bindings);
+    }
+    exports_1("platform", platform);
+    function webWorkerProviders(appComponentType, bus, initData) {
+        return [
+            compiler_1.compilerProviders(),
+            serializer_1.Serializer,
+            di_1.provide(message_bus_1.MessageBus, { useValue: bus }),
+            di_1.provide(client_message_broker_1.ClientMessageBrokerFactory, { useClass: client_message_broker_1.ClientMessageBrokerFactory_ }),
+            di_1.provide(service_message_broker_1.ServiceMessageBrokerFactory, { useClass: service_message_broker_1.ServiceMessageBrokerFactory_ }),
+            renderer_1.WebWorkerRenderer,
+            di_1.provide(api_1.Renderer, { useExisting: renderer_1.WebWorkerRenderer }),
+            di_1.provide(api_2.ON_WEB_WORKER, { useValue: true }),
+            render_view_with_fragments_store_1.RenderViewWithFragmentsStore,
+            render_proto_view_ref_store_1.RenderProtoViewRefStore,
+            di_1.provide(exceptions_1.ExceptionHandler, { useFactory: () => new exceptions_1.ExceptionHandler(new PrintLogger()), deps: [] }),
+            xhr_impl_1.WebWorkerXHRImpl,
+            di_1.provide(xhr_1.XHR, { useExisting: xhr_impl_1.WebWorkerXHRImpl }),
+            di_1.provide(app_root_url_1.AppRootUrl, { useValue: new app_root_url_1.AppRootUrl(initData['rootUrl']) }),
+            event_dispatcher_1.WebWorkerEventDispatcher,
+            forms_1.FORM_PROVIDERS
+        ];
+    }
+    function bootstrapWebWorkerCommon(appComponentType, bus, appProviders = null) {
+        var bootstrapProcess = async_1.PromiseWrapper.completer();
+        var appPromise = platform().asyncApplication((zone) => {
+            // TODO(rado): prepopulate template cache, so applications with only
+            // index.html and main.js are possible.
+            //
+            bus.attachToZone(zone);
+            bus.initChannel(messaging_api_1.SETUP_CHANNEL, false);
+            var subscription;
+            var emitter = bus.from(messaging_api_1.SETUP_CHANNEL);
+            subscription = async_2.ObservableWrapper.subscribe(emitter, (message) => {
+                var bindings = [application_ref_1.applicationCommonBindings(), webWorkerProviders(appComponentType, bus, message)];
+                if (lang_1.isPresent(appProviders)) {
+                    bindings.push(appProviders);
+                }
+                bootstrapProcess.resolve(bindings);
+                async_2.ObservableWrapper.dispose(subscription);
+            });
+            async_2.ObservableWrapper.callNext(bus.to(messaging_api_1.SETUP_CHANNEL), "ready");
+            return bootstrapProcess.promise;
+        });
+        return async_1.PromiseWrapper.then(appPromise, (app) => app.bootstrap(appComponentType));
+    }
+    exports_1("bootstrapWebWorkerCommon", bootstrapWebWorkerCommon);
+    return {
+        setters:[
+            function (di_1_1) {
+                di_1 = di_1_1;
+            },
+            function (forms_1_1) {
+                forms_1 = forms_1_1;
+            },
+            function (lang_1_1) {
+                lang_1 = lang_1_1;
+            },
+            function (exceptions_1_1) {
+                exceptions_1 = exceptions_1_1;
+            },
+            function (async_1_1) {
+                async_1 = async_1_1;
+                async_2 = async_1_1;
+            },
+            function (xhr_1_1) {
+                xhr_1 = xhr_1_1;
+            },
+            function (xhr_impl_1_1) {
+                xhr_impl_1 = xhr_impl_1_1;
+            },
+            function (app_root_url_1_1) {
+                app_root_url_1 = app_root_url_1_1;
+            },
+            function (renderer_1_1) {
+                renderer_1 = renderer_1_1;
+            },
+            function (api_1_1) {
+                api_1 = api_1_1;
+            },
+            function (client_message_broker_1_1) {
+                client_message_broker_1 = client_message_broker_1_1;
+            },
+            function (service_message_broker_1_1) {
+                service_message_broker_1 = service_message_broker_1_1;
+            },
+            function (message_bus_1_1) {
+                message_bus_1 = message_bus_1_1;
+            },
+            function (application_ref_1_1) {
+                application_ref_1 = application_ref_1_1;
+            },
+            function (serializer_1_1) {
+                serializer_1 = serializer_1_1;
+            },
+            function (api_2_1) {
+                api_2 = api_2_1;
+            },
+            function (render_proto_view_ref_store_1_1) {
+                render_proto_view_ref_store_1 = render_proto_view_ref_store_1_1;
+            },
+            function (render_view_with_fragments_store_1_1) {
+                render_view_with_fragments_store_1 = render_view_with_fragments_store_1_1;
+            },
+            function (messaging_api_1_1) {
+                messaging_api_1 = messaging_api_1_1;
+            },
+            function (event_dispatcher_1_1) {
+                event_dispatcher_1 = event_dispatcher_1_1;
+            },
+            function (compiler_1_1) {
+                compiler_1 = compiler_1_1;
+            }],
+        execute: function() {
+            class PrintLogger {
+                constructor() {
+                    this.log = lang_1.print;
+                    this.logError = lang_1.print;
+                    this.logGroup = lang_1.print;
+                }
+                logGroupEnd() { }
+            }
+        }
+    }
+});
+//# sourceMappingURL=application_common.js.map

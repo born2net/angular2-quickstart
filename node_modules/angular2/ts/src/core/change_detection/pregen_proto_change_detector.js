@@ -1,0 +1,21 @@
+System.register(['angular2/src/core/facade/exceptions'], function(exports_1) {
+    var exceptions_1;
+    var PregenProtoChangeDetector;
+    return {
+        setters:[
+            function (exceptions_1_1) {
+                exceptions_1 = exceptions_1_1;
+            }],
+        execute: function() {
+            exports_1("PregenProtoChangeDetectorFactory", Function);
+            class PregenProtoChangeDetector {
+                static isSupported() { return false; }
+                instantiate(dispatcher) {
+                    throw new exceptions_1.BaseException('Pregen change detection not supported in Js');
+                }
+            }
+            PregenProtoChangeDetector = PregenProtoChangeDetector;
+        }
+    }
+});
+//# sourceMappingURL=pregen_proto_change_detector.js.map
